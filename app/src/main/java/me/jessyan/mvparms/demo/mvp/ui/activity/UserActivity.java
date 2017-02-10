@@ -12,15 +12,16 @@ import android.view.View;
 import com.jess.arms.base.DefaultAdapter;
 import com.jess.arms.utils.UiUtils;
 import com.paginate.Paginate;
+import com.tbruyelle.rxpermissions.RxPermissions;
 
 import butterknife.BindView;
 import me.jessyan.mvparms.demo.R;
-import me.jessyan.mvparms.demo.di.component.AppComponent;
+import common.AppComponent;
 import me.jessyan.mvparms.demo.di.component.DaggerUserComponent;
 import me.jessyan.mvparms.demo.di.module.UserModule;
 import me.jessyan.mvparms.demo.mvp.contract.UserContract;
 import me.jessyan.mvparms.demo.mvp.presenter.UserPresenter;
-import me.jessyan.mvparms.demo.mvp.ui.common.WEActivity;
+import common.WEActivity;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -40,17 +41,17 @@ public class UserActivity extends WEActivity<UserPresenter> implements UserContr
 
     private Paginate mPaginate;
     private boolean isLoadingMore;
-
+    private RxPermissions mRxPermissions;
 
     @Override
     protected void setupActivityComponent(AppComponent appComponent) {
+        this.mRxPermissions = new RxPermissions(this);
         DaggerUserComponent
                 .builder()
                 .appComponent(appComponent)
                 .userModule(new UserModule(this))
                 .build()
                 .inject(this);
-
     }
 
     @Override
@@ -119,12 +120,12 @@ public class UserActivity extends WEActivity<UserPresenter> implements UserContr
 
     @Override
     public void launchActivity(Intent intent) {
-
+        UiUtils.startActivity(intent);
     }
 
     @Override
     public void killMyself() {
-
+        finish();
     }
 
     @Override
@@ -148,6 +149,11 @@ public class UserActivity extends WEActivity<UserPresenter> implements UserContr
     @Override
     public void endLoadMore() {
         isLoadingMore = false;
+    }
+
+    @Override
+    public RxPermissions getRxPermissions() {
+        return mRxPermissions;
     }
 
     /**
@@ -177,5 +183,12 @@ public class UserActivity extends WEActivity<UserPresenter> implements UserContr
                     .build();
             mPaginate.setHasMoreDataToLoad(false);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        this.mRxPermissions = null;
+        this.mPaginate = null;
     }
 }
